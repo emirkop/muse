@@ -1,0 +1,150 @@
+name: MuseApp
+
+# Foundation phase settings — every value below is a reasonable
+# provisional default, not a final product decision:
+# - Deployment target (iOS 18.0): PROVISIONAL. (numeric app-size
+# budget / target-device support range) and the research
+# dependency ("confirm exact minimum iOS version for the specific
+# RealityKit APIs Muse depends on") are both still open — see
+#.
+# - Bundle identifier (com.muse.app): PROVISIONAL placeholder — no Apple
+# Developer Team / real reverse-DNS identity has been established.
+options:
+  bundleIdPrefix: com.muse
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+
+configs:
+  Debug: debug
+  Release: release
+
+#: Google's official GoogleSignIn-iOS SDK (approved per
+# §15 — official, actively maintained,
+# Apache 2.0; chosen over hand-rolling OAuth/OIDC via
+# ASWebAuthenticationSession to avoid reimplementing a security-sensitive
+# flow by hand). Only the `GoogleSignIn` (UIKit) product is used — never
+# `GoogleSignInSwift`, which is SwiftUI-only and out of scope per this
+# project's UIKit-only mandate.
+packages:
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS
+    from: 9.0.0
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    ENABLE_STRICT_CONCURRENCY: complete
+
+targets:
+  MuseApp:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: MuseApp
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.muse.app
+        PRODUCT_NAME: MuseApp
+        TARGETED_DEVICE_FAMILY: "1" # iPhone only (native iOS, no iPad-specific scope confirmed)
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Muse
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+    # Sign In with Apple capability. XcodeGen generates the
+    # .entitlements file itself from `properties` below — it is not
+    # hand-authored, per this project's "project.yml is the source of
+    # truth, .xcodeproj/derived files are generated output" convention.
+    entitlements:
+      path: MuseApp/MuseApp.entitlements
+      properties:
+        com.apple.developer.applesignin:
+          - Default
+        #: Universal Links for share URLs (https://muse.app/m/*),
+        # per Apple's "Supporting associated domains" — the `applinks:`
+        # service bound to the bare domain, no path or scheme. The domain
+        # is a PROVISIONAL PLACEHOLDER, like the bundle id and Google
+        # client id above: no Muse-owned domain, Apple Developer Team ID,
+        # or hosted apple-app-site-association exists yet, so this
+        # entitlement cannot be verified on a device ( report,
+        # unmet verification). It must match the backend's
+        # SHARE_LINK_BASE_URL host and AppEnvironment.shareLinkHosts.
+        com.apple.developer.associated-domains:
+          - applinks:muse.app
+    #: Google Sign-In configuration. Both values below are
+    # PROVISIONAL PLACEHOLDERS — no real Google Cloud project/OAuth
+    # client has been provisioned for Muse yet (mirrors the com.muse.app
+    # bundle-ID placeholder above and the backend's unset-by-default
+    # GOOGLE_CLIENT_ID, §6). The
+    # reversed-client-ID URL scheme must exactly match GIDClientID's
+    # numeric prefix once a real client ID exists — they are not
+    # independently choosable.
+    info:
+      path: MuseApp/Info.plist
+      properties:
+        GIDClientID: "000000000000-placeholder.apps.googleusercontent.com"
+        CFBundleURLTypes:
+          - CFBundleURLSchemes:
+              - com.googleusercontent.apps.000000000000-placeholder
+        #: Photos permission. Both keys are load-bearing.
+        # NSPhotoLibraryUsageDescription is mandatory — iOS terminates
+        # the app the instant authorization is requested without it.
+        # The string is user-facing and appears in the system prompt.
+        NSPhotoLibraryUsageDescription: >-
+          Muse needs access to your photo library so you can choose the photographs
+          displayed on your Room's walls.
+        # Suppresses iOS's automatic "update your selection?" alert that
+        # otherwise fires on every library access under Limited Access.
+        # 's Permission UX requires a "persistent,
+        # low-friction affordance… not a nagging repeated prompt" — this
+        # key is what makes that literally true, handing the timing to
+        # the app's own "Manage Selected Photos" button instead.
+        PHPhotoLibraryPreventAutomaticLimitedAccessAlert: true
+    dependencies:
+      - sdk: RealityKit.framework
+      #: StoreKit 2 for the ONE non-consumable capacity unlock
+      #. Imported only by Core/StoreKit/AppStoreCapacityStore.swift.
+      - sdk: StoreKit.framework
+      - package: GoogleSignIn
+        product: GoogleSignIn
+
+  MuseAppTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: MuseAppTests
+      #: the DEV PLACEHOLDER StoreKit configuration, bundled into
+      # the test target so StoreKitTest's SKTestSession can load it. Not a
+      # product decision — see the file's referenceName.
+      - path: MuseApp/Resources/DevStoreKit/MusePlaceholder.storekit
+        buildPhase: resources
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: MuseApp
+      #: StoreKit local testing (SKTestSession) for the purchase
+      # client. Test target only; never linked into the app.
+      - sdk: StoreKitTest.framework
+
+schemes:
+  MuseApp:
+    build:
+      targets:
+        MuseApp: all
+        MuseAppTests: [test]
+    test:
+      targets:
+        - MuseAppTests
+    run:
+      config: Debug
+      #: run against the DEV PLACEHOLDER StoreKit configuration so
+      # the purchase flow can be exercised in the Simulator without App
+      # Store Connect. Its product id, name and price are placeholders,
+      # NOT product decisions.
+      storeKitConfiguration: MuseApp/Resources/DevStoreKit/MusePlaceholder.storekit
