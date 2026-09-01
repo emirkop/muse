@@ -910,7 +910,7 @@ func TestProjectionCannotDriftFromThePublishedLayout(t *testing.T) {
 	if layoutURL == "" {
 		t.Fatal("the manifest lists no layout file")
 	}
-	served, err := http.Get(layoutURL)
+	served, err := testGet(layoutURL)
 	if err != nil {
 		t.Fatal(err)
 	}

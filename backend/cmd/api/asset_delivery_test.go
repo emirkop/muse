@@ -178,7 +178,7 @@ func TestBundleBytesSupportRangeRequests(t *testing.T) {
 
 	req, _ := http.NewRequest(http.MethodGet, geometryURL, nil)
 	req.Header.Set("Range", fmt.Sprintf("bytes=%d-", offset))
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := testHTTPClient.Do(req)
 	if err != nil {
 		t.Fatalf("range request: %v", err)
 	}
@@ -201,7 +201,7 @@ func TestBundleBytesSupportRangeRequests(t *testing.T) {
 
 	req, _ = http.NewRequest(http.MethodGet, geometryURL, nil)
 	req.Header.Set("Range", fmt.Sprintf("bytes=%d-", total+10))
-	resp2, err := http.DefaultClient.Do(req)
+	resp2, err := testHTTPClient.Do(req)
 	if err != nil {
 		t.Fatalf("unsatisfiable range request: %v", err)
 	}
@@ -513,7 +513,7 @@ func fetchURL(t *testing.T, url string, headers map[string]string) ([]byte, http
 	for name, value := range headers {
 		req.Header.Set(name, value)
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := testHTTPClient.Do(req)
 	if err != nil {
 		t.Fatalf("GET %s: %v", url, err)
 	}
@@ -527,7 +527,7 @@ func fetchURL(t *testing.T, url string, headers map[string]string) ([]byte, http
 
 func fetchURLResponse(t *testing.T, url string) (*http.Response, []byte) {
 	t.Helper()
-	resp, err := http.Get(url) //nolint:gosec // a test URL built from the test server
+	resp, err := testGet(url) //nolint:gosec // a test URL built from the test server
 	if err != nil {
 		t.Fatalf("GET %s: %v", url, err)
 	}

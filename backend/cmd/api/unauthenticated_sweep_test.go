@@ -299,7 +299,7 @@ func (s *stack) doAnonymous(method, path string, body any, headers map[string]st
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := testHTTPClient.Do(req)
 	if err != nil {
 		s.t.Fatal(err)
 	}
@@ -520,7 +520,7 @@ func TestDevStorageBytesRequireASignedURL(t *testing.T) {
 	if r := s.doAnonymous(http.MethodPut, path, map[string]string{"x": "y"}, nil); r.status != http.StatusForbidden {
 		t.Fatalf("unsigned PUT must be refused, got %d", r.status)
 	}
-	resp, err := http.Get(signed)
+	resp, err := testGet(signed)
 	if err != nil {
 		t.Fatal(err)
 	}

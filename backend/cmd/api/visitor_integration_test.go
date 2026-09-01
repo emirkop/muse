@@ -102,7 +102,7 @@ func TestVisitorRoom_AndItsPhotographs_AreReadable(t *testing.T) {
 	if decoded.Tickets[0].PixelWidth != 640 {
 		t.Fatalf("stored dimensions must come through: %s", tickets.body)
 	}
-	resp, err := http.Get(decoded.Tickets[0].URL)
+	resp, err := testGet(decoded.Tickets[0].URL)
 	if err != nil {
 		t.Fatal(err)
 	}

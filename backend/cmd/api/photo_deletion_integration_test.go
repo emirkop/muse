@@ -376,7 +376,7 @@ func TestDeleteAPI_WithoutObjectStorage_Answers503(t *testing.T) {
 
 	req, _ := http.NewRequest(http.MethodDelete, server.URL+"/museum/me/rooms/"+roomID+"/photos/00000000-0000-4000-8000-000000000000", bytes.NewReader(nil))
 	req.Header.Set("Authorization", "Bearer "+s.token)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := testHTTPClient.Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}

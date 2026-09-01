@@ -236,6 +236,7 @@ func newStackWithCapacities(t *testing.T, capacities entitlementdomain.ItemCapac
 	server.Config.Handler = observability.Instrument(metrics, router, router)
 	server.Start()
 	t.Cleanup(server.Close)
+	requireServing(t, server.URL)
 
 	var accountID string
 	if err := pool.Pool().QueryRow(ctx, `INSERT INTO accounts (display_name) VALUES ('owner') RETURNING id`).Scan(&accountID); err != nil {
@@ -278,7 +279,7 @@ func (s *stack) doAgainst(baseURL, method, path string, body any, token string) 
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := testHTTPClient.Do(req)
 	if err != nil {
 		s.t.Fatalf("%s %s: %v", method, path, err)
 	}
@@ -296,7 +297,9 @@ func (s *stack) degradedMuseumServer() *httptest.Server {
 	router := platformhttp.NewRouter()
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	museumiface.NewHandlers(degraded, identityiface.NewBearerAuthenticator(s.signer), logger).RegisterRoutes(router)
-	return httptest.NewServer(router)
+	server := httptest.NewServer(router)
+	s.t.Cleanup(server.Close)
+	return server
 }
 
 func (s *stack) createRoom() string {
@@ -375,7 +378,7 @@ func (s *stack) put(p *photoFixture) int {
 	for k, v := range p.upload.Headers {
 		req.Header.Set(k, v)
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := testHTTPClient.Do(req)
 	if err != nil {
 		s.t.Fatalf("PUT: %v", err)
 	}
@@ -486,7 +489,7 @@ func TestPhotoFlow_InitiateUploadAssignAndFetch(t *testing.T) {
 		t.Error("tickets must be short-lived")
 	}
 
-	got, err := http.Get(tickets.Tickets[0].URL)
+	got, err := testGet(tickets.Tickets[0].URL)
 	if err != nil {
 		t.Fatalf("GET ticket: %v", err)
 	}
@@ -767,7 +770,7 @@ func TestPhotoFlow_WithoutObjectStorage_PhotoEndpointsAnswer503(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodPost, server.URL+"/museum/me/rooms/"+roomID+"/photos", bytes.NewReader([]byte(`{"asset_ids":["00000000-0000-4000-8000-000000000000"]}`)))
 	req.Header.Set("Authorization", "Bearer "+s.token)
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := testHTTPClient.Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}

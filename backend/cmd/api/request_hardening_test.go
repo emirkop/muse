@@ -37,7 +37,7 @@ func TestOversizedJSONBodies_AreRefusedAndCreateNothing(t *testing.T) {
 			if at.token != "" {
 				req.Header.Set("Authorization", "Bearer "+at.token)
 			}
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := testHTTPClient.Do(req)
 			if err == nil {
 				defer resp.Body.Close()
 				raw, _ := io.ReadAll(resp.Body)
@@ -66,7 +66,7 @@ func TestShareLandingPages_CarryHardeningHeaders(t *testing.T) {
 		"collection any code": "/c/" + unknownCode,
 	} {
 		t.Run(name, func(t *testing.T) {
-			resp, err := http.Get(s.server.URL + path)
+			resp, err := testGet(s.server.URL + path)
 			if err != nil {
 				t.Fatal(err)
 			}

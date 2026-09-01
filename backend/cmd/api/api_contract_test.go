@@ -517,7 +517,7 @@ func (s *stack) doRaw(method, path string, body []byte, token string) (*http.Res
 	if token != "" {
 		request.Header.Set("Authorization", "Bearer "+token)
 	}
-	response, err := http.DefaultClient.Do(request)
+	response, err := testHTTPClient.Do(request)
 	if err != nil {
 		s.t.Fatalf("do: %v", err)
 	}

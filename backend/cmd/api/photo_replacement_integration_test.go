@@ -435,7 +435,7 @@ func TestReplaceAPI_WithoutObjectStorage_Answers503(t *testing.T) {
 		bytes.NewReader([]byte(`{"asset_id":"00000000-0000-4000-8000-000000000001"}`)))
 	req.Header.Set("Authorization", "Bearer "+s.token)
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := testHTTPClient.Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}

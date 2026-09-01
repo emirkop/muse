@@ -161,7 +161,7 @@ func (s *emailAuthStack) post(t *testing.T, path string, body any) (int, map[str
 	if err != nil {
 		t.Fatalf("encode: %v", err)
 	}
-	resp, err := http.Post(s.server.URL+path, "application/json", bytes.NewReader(encoded))
+	resp, err := testPostJSON(s.server.URL+path, bytes.NewReader(encoded))
 	if err != nil {
 		t.Fatalf("post %s: %v", path, err)
 	}

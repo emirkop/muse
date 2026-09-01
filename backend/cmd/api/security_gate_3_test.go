@@ -43,7 +43,7 @@ func (s *stack) ticketFor(t *testing.T, token, roomID, assetID string) string {
 
 func redeem(t *testing.T, rawURL string) reply {
 	t.Helper()
-	resp, err := http.Get(rawURL) //nolint:gosec // a test URL minted by the test server
+	resp, err := testGet(rawURL) //nolint:gosec // a test URL minted by the test server
 	if err != nil {
 		t.Fatalf("GET %s: %v", rawURL, err)
 	}
@@ -74,7 +74,7 @@ func TestGate3_TicketURLs_AreUnforgeableAndNonDurable_AndFailGenerically(t *test
 	if r := redeem(t, valid); r.status != http.StatusOK {
 		t.Fatalf("a valid ticket must redeem for the owner, got %d %s", r.status, r.body)
 	}
-	if resp, err := http.Get(valid); err == nil { //nolint:gosec // test URL
+	if resp, err := testGet(valid); err == nil { //nolint:gosec // test URL
 		resp.Body.Close()
 		if cc := resp.Header.Get("Cache-Control"); cc != "private, no-store" {
 			t.Errorf("bytes must never be cached by an intermediary: Cache-Control %q", cc)
