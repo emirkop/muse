@@ -1,0 +1,37 @@
+# --- macOS
+.DS_Store
+
+# --- Xcode: project is generated from ios/project.yml by XcodeGen
+ios/MuseApp.xcodeproj/
+ios/build/
+*.xcuserstate
+xcuserdata/
+DerivedData/
+
+# --- Go / backend local state
+backend/.dev-storage/
+backend/bin/
+
+# --- Secrets: only config/.env.example is tracked
+.env
+.env.*
+!*.env.example
+*.pem
+*.p8
+*.p12
+
+# --- Documentation is kept outside this repository
+*.md
+
+# --- Authored 3D/design content and its tooling live outside this repository.
+# This repository holds the engineered product: iOS app, Go backend, docs and
+# the DEV fixtures the delivery pipeline is verified against.
+assets/blender/
+tooling/blender/
+build/
+*.blend
+*.blend1
+
+# --- Python caches
+__pycache__/
+*.pyc
