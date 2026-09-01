@@ -6,14 +6,14 @@ final class AppCoordinatorDeepLinkTests: XCTestCase {
     private let shareURL = URL(string: "https://muse.app/m/abcdefghijklmnopqrstuv")!
     private let otherShareURL = URL(string: "https://muse.app/m/ZZZZZZZZZZZZZZZZZZZZZZ")!
 
-    override func setUp() async throws {
-        try await super.setUp()
-        UIView.setAnimationsEnabled(false)
+    override func setUp() {
+        super.setUp()
+        MainActor.assumeIsolated { UIView.setAnimationsEnabled(false) }
     }
 
-    override func tearDown() async throws {
-        UIView.setAnimationsEnabled(true)
-        try await super.tearDown()
+    override func tearDown() {
+        MainActor.assumeIsolated { UIView.setAnimationsEnabled(true) }
+        super.tearDown()
     }
 
     private func makeCoordinator() -> AppCoordinator {
@@ -39,11 +39,21 @@ final class AppCoordinatorDeepLinkTests: XCTestCase {
     }
 
     private func settle() {
-        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.1))
+        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.05))
+    }
+
+    // A navigation transition is not guaranteed to finish inside a fixed
+    // sleep: on a loaded machine it can take longer, and the test then reads
+    // a stack that is still mid-transition. Wait for the state instead.
+    private func settle(until reached: () -> Bool, timeout: TimeInterval = 3) {
+        let deadline = Date(timeIntervalSinceNow: timeout)
+        while !reached() && Date() < deadline {
+            RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.02))
+        }
     }
 
     private func topIs<T: UIViewController>(_ coordinator: AppCoordinator, _ type: T.Type, _ message: String = "") {
-        settle()
+        settle(until: { coordinator.testViewControllers.last is T })
         XCTAssertTrue(coordinator.testViewControllers.last is T,
                       "expected \(T.self) on top, got \(coordinator.testViewControllers.map { String(describing: Swift.type(of: $0)) }) \(message)")
     }
@@ -88,7 +98,7 @@ final class AppCoordinatorDeepLinkTests: XCTestCase {
         coordinator.handleIncomingURL(shareURL)
 
         coordinator.handleIncomingURL(otherShareURL)
-        settle()
+        settle(until: { coordinator.testViewControllers.filter { $0 is ShareLinkLandingViewController }.count == 1 })
 
         XCTAssertEqual(coordinator.testPendingShareLinkCode, "ZZZZZZZZZZZZZZZZZZZZZZ")
         XCTAssertEqual(coordinator.testViewControllers.filter { $0 is ShareLinkLandingViewController }.count, 1)
