@@ -208,7 +208,11 @@ func (s *FilesystemObjectStorage) Handler() http.Handler {
 		}
 		q := r.URL.Query()
 		if !s.verifySignature(r.Method, key, q) {
-			http.Error(w, "signature invalid or expired", http.StatusForbidden)
+			if r.Method == http.MethodPut {
+				rejectUpload(w, r, "signature invalid or expired", http.StatusForbidden)
+			} else {
+				http.Error(w, "signature invalid or expired", http.StatusForbidden)
+			}
 			return
 		}
 
@@ -223,17 +227,31 @@ func (s *FilesystemObjectStorage) Handler() http.Handler {
 	})
 }
 
+// A PUT rejected before its body is read leaves the client writing into a
+// socket the server is closing, which surfaces as a connection reset instead
+// of the refusal itself — invisible on a fast loopback with a small body and
+// not invisible anywhere else. Draining first makes the refusal the outcome
+// the caller actually observes.
+func rejectUpload(w http.ResponseWriter, r *http.Request, message string, status int) {
+	if r.Body != nil {
+		_, _ = io.CopyN(io.Discard, r.Body, maxDrainedRejectedUpload)
+	}
+	http.Error(w, message, status)
+}
+
+const maxDrainedRejectedUpload = 32 << 20
+
 func (s *FilesystemObjectStorage) handlePut(w http.ResponseWriter, r *http.Request, key string, q url.Values) {
 	wantType := q.Get("ct")
 	wantLen, _ := strconv.ParseInt(q.Get("len"), 10, 64)
 	wantSum := q.Get("sum")
 
 	if r.Header.Get("Content-Type") != wantType {
-		http.Error(w, "content-type does not match the signed value", http.StatusForbidden)
+		rejectUpload(w, r, "content-type does not match the signed value", http.StatusForbidden)
 		return
 	}
 	if r.ContentLength >= 0 && r.ContentLength != wantLen {
-		http.Error(w, "content-length does not match the signed value", http.StatusForbidden)
+		rejectUpload(w, r, "content-length does not match the signed value", http.StatusForbidden)
 		return
 	}
 
@@ -257,7 +275,7 @@ func (s *FilesystemObjectStorage) handlePut(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	if written != wantLen {
-		http.Error(w, "body length does not match the signed value", http.StatusBadRequest)
+		rejectUpload(w, r, "body length does not match the signed value", http.StatusBadRequest)
 		return
 	}
 	gotSum := hex.EncodeToString(hash.Sum(nil))
