@@ -1,0 +1,35 @@
+{
+  "identifier": "8B1D1E2C-5D8A-4E0B-9B6F-0000DEADBEEF",
+  "nonRenewingSubscriptions": [],
+  "products": [
+    {
+      "displayPrice": "0.99",
+      "familyShareable": false,
+      "internalID": "6748000001",
+      "localizations": [
+        {
+          "description": "DEV PLACEHOLDER \u2014 not a product decision, not App Store Connect content, not localized copy. Exercises the purchase mechanism locally.",
+          "displayName": "DEV PLACEHOLDER Collection Capacity",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "dev.muse.placeholder.collection_capacity",
+      "referenceName": "DEV PLACEHOLDER capacity unlock (price/name/id are NOT product decisions; 0.99 is a StoreKit-required placeholder)",
+      "type": "NonConsumable"
+    }
+  ],
+  "settings": {
+    "_applicationInternalID": "6748000000",
+    "_developerTeamID": "PLACEHOLDR",
+    "_failTransactionsEnabled": false,
+    "_locale": "en_US",
+    "_storefront": "USA",
+    "_storeKitErrors": [],
+    "_lastSynchronizedDate": 780000000.0
+  },
+  "subscriptionGroups": [],
+  "version": {
+    "major": 3,
+    "minor": 0
+  }
+}
