@@ -1,0 +1,100 @@
+# Muse CI — build and basic checks for both projects.
+# No deploy, no secrets. Dedicated lint tooling (SwiftLint/SwiftFormat,
+# golangci-lint) is deliberately not added: each would be a new third-party
+# dependency, which needs its own justification.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  # Pinned so a change to the runner image's default Xcode cannot silently
+  # change the compiler. The app is built with Swift 6 language mode and uses
+  # features (isolated deinit) that need Xcode 26 or newer.
+  XCODE_APP: /Applications/Xcode_26.6.app
+  IOS_SIMULATOR: iPhone 17
+
+jobs:
+  ios-build:
+    name: iOS — build & test
+    runs-on: macos-26
+    defaults:
+      run:
+        working-directory: ios
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s "$XCODE_APP"
+          xcodebuild -version
+          swift --version
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate Xcode project
+        run: xcodegen generate
+      - name: Build
+        run: |
+          xcodebuild -project MuseApp.xcodeproj -scheme MuseApp \
+            -destination 'generic/platform=iOS Simulator' build
+      - name: Test
+        run: |
+          xcodebuild -project MuseApp.xcodeproj -scheme MuseApp \
+            -destination "platform=iOS Simulator,name=$IOS_SIMULATOR" test
+      # Aggregate line coverage over MuseApp/Domain/ must stay at or above
+      # 80%. Aggregate, not per-file; the delta against the committed baseline
+      # is printed but is not a merge blocker.
+      - name: Domain coverage gate (>= 80% aggregate)
+        run: DESTINATION="platform=iOS Simulator,name=$IOS_SIMULATOR" scripts/domain-coverage.sh
+
+  go-build:
+    name: Go — build, vet, format, test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    # The API contract suite is an integration suite against a real
+    # PostgreSQL — there is no mock fallback, because a mocked API contract
+    # proves nothing. Without this service the database-backed tests skip.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: muse_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          # Must be at least the patch release backend/go.mod pins.
+          go-version: "1.26.6"
+      - name: Build
+        run: go build ./...
+      - name: Vet
+        run: go vet ./...
+      - name: Format check
+        run: test -z "$(gofmt -l .)"
+      - name: Test
+        run: go test ./...
+      # The one entry point for the backend HTTP contract — request/response
+      # shape, status/error contract, auth and ownership, malformed input,
+      # and privacy/nonexistent equivalence. Includes the authorization
+      # regression suites and the route ledger, which fails when a route
+      # ships with no declared contract. Migrations run from the suite's own
+      # harness.
+      - name: API contract suite
+        env:
+          TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/muse_test?sslmode=disable
+        run: scripts/api-contract.sh
+      # Aggregate statement coverage over internal/*/domain must stay at or
+      # above 95%. Aggregate, not per-package; the delta against the
+      # committed baseline is printed but is not a merge blocker.
+      - name: Domain coverage gate (>= 95% aggregate)
+        run: scripts/domain-coverage.sh
