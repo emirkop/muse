@@ -1,0 +1,17 @@
+{
+  "_comment": "MUSE DEVELOPMENT FIXTURE publish descriptor - NOT production artwork. The additional geometry tier 3 reveals.",
+  "bundle_id": "dev_fixture_collection_design_tier3",
+  "version": 1,
+  "kind": "collection_design",
+  "format": "usda",
+  "min_app_version": 1,
+  "files": [
+    {
+      "asset_id": "geometry",
+      "role": "geometry",
+      "path": "geometry.usda",
+      "content_type": "model/vnd.usda+ascii"
+    }
+  ],
+  "dependencies": []
+}

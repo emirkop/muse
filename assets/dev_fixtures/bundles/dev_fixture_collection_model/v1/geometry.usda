@@ -1,0 +1,20 @@
+#usda 1.0
+(
+    doc = "MUSE DEVELOPMENT FIXTURE - NOT production artwork. Proves the catalog Model to Presentation Asset mapping only; not visually representative."
+    metersPerUnit = 1
+    upAxis = "Y"
+)
+
+def Xform "CollectionModelFixture"
+{
+    def Mesh "Placeholder"
+    {
+        uniform bool doubleSided = 1
+        float3[] extent = [(-0.0500, 0.0000, -0.0500), (0.0500, 0.1000, 0.0500)]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 1, 2, 3, 7, 6, 5, 4, 0, 4, 5, 1, 1, 5, 6, 2, 2, 6, 7, 3, 3, 7, 4, 0]
+        point3f[] points = [(-0.0500, 0.0000, 0.0500), (0.0500, 0.0000, 0.0500), (0.0500, 0.0000, -0.0500), (-0.0500, 0.0000, -0.0500), (-0.0500, 0.1000, 0.0500), (0.0500, 0.1000, 0.0500), (0.0500, 0.1000, -0.0500), (-0.0500, 0.1000, -0.0500)]
+        color3f[] primvars:displayColor = [(0.55, 0.55, 0.58)]
+        uniform token subdivisionScheme = "none"
+    }
+}

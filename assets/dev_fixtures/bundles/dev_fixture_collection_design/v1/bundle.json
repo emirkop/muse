@@ -1,0 +1,23 @@
+{
+  "_comment": "MUSE DEVELOPMENT FIXTURE publish descriptor - NOT production artwork, NOT a Collection Room design, NOT visual direction. Geometry only: a Design's per-tier slot table is (, both OPEN).",
+  "bundle_id": "dev_fixture_collection_design",
+  "version": 1,
+  "kind": "collection_design",
+  "format": "usda",
+  "min_app_version": 1,
+  "files": [
+    {
+      "asset_id": "geometry",
+      "role": "geometry",
+      "path": "geometry.usda",
+      "content_type": "model/vnd.usda+ascii"
+    },
+    {
+      "asset_id": "layout",
+      "role": "layout",
+      "path": "layout.json",
+      "content_type": "application/json"
+    }
+  ],
+  "dependencies": []
+}

@@ -1,0 +1,17 @@
+{
+  "_comment": "MUSE DEVELOPMENT FIXTURE publish descriptor - NOT production artwork, NOT a collection item, NOT visual direction, and deliberately NOT visually representative. It exists only to prove the catalog Model to Presentation Asset mapping and delivery contract.",
+  "bundle_id": "dev_fixture_collection_model",
+  "version": 1,
+  "kind": "collection_item",
+  "format": "usda",
+  "min_app_version": 1,
+  "files": [
+    {
+      "asset_id": "geometry",
+      "role": "geometry",
+      "path": "geometry.usda",
+      "content_type": "model/vnd.usda+ascii"
+    }
+  ],
+  "dependencies": []
+}
